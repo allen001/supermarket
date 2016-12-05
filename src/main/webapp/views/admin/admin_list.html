@@ -1,0 +1,82 @@
+<div class="panel panel-primary">
+  <div class="panel-heading">管理员列表</div>
+  <div class="panel-body">
+  	<table class="table table-hover table-bordered">
+    	<thead>
+    		<tr>
+    			<th>ID</th>
+    			<th>账户名</th>
+    			<th>密码</th>
+    			<th>角色</th>
+    			<th>操作</th>
+    		</tr>
+    	</thead>
+    	<tbody id="adminListTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script id="adminlist" type="text/html">
+{{each list as value i}}
+	<tr>
+		<td>{{i+1}}</td>
+		<td>{{value.loginId}}</td>
+		<td>{{value.loginPassword}}</td>
+		<td>系统管理员</td>
+		<td>
+			<button del loginId="{{value.loginId}}" class="btn btn-sm btn-primary">删除</button>
+			<button upd class="btn btn-sm btn-primary">编辑</button>
+		</td>
+	</tr>
+{{/each}}
+</script>
+<script>
+	$(function(){
+		//update breadcrumb
+		$('#breadcrumb2').text('系统管理')
+		$('#breadcrumb3').text('管理员列表')
+		
+		var admin={
+			init:function(){
+				$.post('admin/list.do',function(res){
+					if(res.success){
+						var html = template('adminlist', {'list':res.others});
+						$('#adminListTbody').html(html);
+						
+						//del
+						$('#adminListTbody').find('button[del]').on('click',function(){
+							var loginId = $(this).attr('loginId');
+							layer.confirm('确定要删除？',{icon:3,title:'提示'},function(index){
+								$.post('admin/del.do',{'loginId':loginId},function(res){
+									if(res.success){
+										toastr.success('操作成功','提示');
+										admin.init();
+									}
+								})
+								layer.close(index);
+							});
+						})
+						
+						//upd
+						$('#adminListTbody').find('button[upd]').on('click',function(){
+							var _tr = $(this).closest('tr'),
+								  _tds = _tr.find('td'),
+								  loginId = _tds.eq(1).text();
+							$('#content').load('views/admin/admin_show.html',function(){
+								var $form = $('#adminForm');
+								$form.find('#loginId').val(loginId);
+								$form.find('#loginIdTxt').text(loginId);
+								
+								$form.attr('action','admin/update.do');
+							});
+						})
+						
+					}else{
+						alert(res);
+					}
+				});
+			}
+		}
+		admin.init();
+	});
+</script>

@@ -1,0 +1,108 @@
+<form id="supplierForm" class="form-horizontal" role="form" action="supplier/save.do">
+  <div class="form-group">
+    <label class="col-md-2 control-label">供货商编号</label>
+    <div class="col-md-5">
+      <p class="form-control-static" id="suppIdTxt"></p>
+      <input type="hidden" id="suppId" name="suppId" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="suppName" class="col-sm-2 control-label">公司名称</label>
+    <div class="col-sm-5">
+      <input type="text" class="form-control" id="suppName" name="suppName" placeholder="公司名称">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="contactPerson" class="col-sm-2 control-label">联系人</label>
+    <div class="col-sm-5">
+      <input type="text" class="form-control" id="contactPerson" name="contactPerson" placeholder="联系人">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="telphone" class="col-sm-2 control-label">联系电话</label>
+    <div class="col-sm-5">
+      <input type="text" class="form-control" id="telphone" name="telphone" placeholder="联系电话">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="address" class="col-sm-2 control-label">联系地址</label>
+    <div class="col-sm-5">
+      <input type="text" class="form-control" id="address" name="address" placeholder="联系地址">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="others" class="col-sm-2 control-label">备注</label>
+    <div class="col-sm-5">
+      <textarea class="form-control" id="others" name="others" placeholder="备注" style="width: 100%;height: 100px;resize: none;"></textarea>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <button type="submit" class="btn btn-primary">保存</button>
+    </div>
+  </div>
+</form>
+<script>
+	$(function(){
+		//get id
+		if($('#supplierForm').attr('action')!='supplier/update.do'){
+			$.get('supplier/selectMaxSuppId.do',function(res){
+				if(res.success){
+					$('#suppId').val(res.others);
+					$('#suppIdTxt').text(res.others);
+				}
+			});
+		}
+		
+		$('#supplierForm').bootstrapValidator({
+		    excluded: [':disabled', ':hidden', ':not(:visible)'],
+		    feedbackIcons: {
+		        valid: 'glyphicon glyphicon-ok',
+		        invalid: 'glyphicon glyphicon-remove',
+		        validating: 'glyphicon glyphicon-refresh'
+		    },
+		    live: 'enabled',
+		    message: 'This value is not valid',
+		    fields: {
+		    	suppName:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'公司名称不能为空'
+		    			}
+		    		}
+		    	},
+		    	contactPerson:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'联系人不能为空'
+		    			}
+		    		}
+		    	},
+		    	telphone:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'联系电话不能为空'
+		    			}
+		    		}
+		    	},
+		    	address:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'联系地址不能为空'
+		    			}
+		    		}
+		    	}
+		    },
+		    submitHandler: function(validator, form, submitButton) {
+		    	$.post(form.attr('action'),form.serialize(),function(res){
+		    		if(res.success){
+		    			$('#content').load('views/supplier/supplier_list.html');
+		    			toastr.success('操作成功','提示');
+		    		}else{
+		    			toastr.error('操作失败，请稍后重试...','提示');
+		    		}
+		    	})
+		    }
+		});
+	});
+</script>

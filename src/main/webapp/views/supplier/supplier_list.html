@@ -1,0 +1,94 @@
+<div class="panel panel-primary">
+  <div class="panel-heading">供货商列表</div>
+  <div class="panel-body">
+  	<table class="table table-hover table-bordered">
+    	<thead>
+    		<tr>
+    			<th>供货商编号</th>
+    			<th>公司名称</th>
+    			<th>联系人</th>
+    			<th>联系电话</th>
+    			<th>联系地址</th>
+    			<th>操作</th>
+    		</tr>
+    	</thead>
+    	<tbody id="supplierListTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script id="supplierlist" type="text/html">
+{{each list as value i}}
+	<tr others="{{value.others}}">
+		<td>{{value.suppId}}</td>
+		<td>{{value.suppName}}</td>
+		<td>{{value.contactPerson}}</td>
+		<td>{{value.telphone}}</td>
+		<td>{{value.address}}</td>
+		<td>
+			<button del dId="{{value.suppId}}" class="btn btn-sm btn-primary">删除</button>
+			<button upd class="btn btn-sm btn-primary">编辑</button>
+		</td>
+	</tr>
+{{/each}}
+</script>
+<script>
+	$(function(){
+		//update breadcrumb
+		$('#breadcrumb2').text('供货商管理');
+		$('#breadcrumb3').text('供货商列表');
+		
+		var supplier = {
+			init:function(){
+				$.post('supplier/list.do',function(res){
+					if(res.success){
+						var html = template('supplierlist', {'list':res.others});
+						$('#supplierListTbody').html(html);
+						
+						//del
+						$('#supplierListTbody').find('button[del]').on('click',function(){
+							var id = $(this).attr('dId');
+							layer.confirm('确定要删除？',{icon:3,title:'提示'},function(index){
+								$.post('supplier/del.do',{'id':id},function(res){
+									if(res.success){
+										supplier.init();
+									}
+								});
+								layer.close(index);
+							});
+						})
+						
+						//upd
+						$('#supplierListTbody').find('button[upd]').on('click',function(){
+							var _tr = $(this).closest('tr'),
+								  _tds = _tr.find('td'),
+								  suppId = _tds.eq(0).text(),
+								  suppName = _tds.eq(1).text(),
+								  contactPerson = _tds.eq(2).text(),
+								  telphone = _tds.eq(3).text(),
+								  address = _tds.eq(4).text(),
+								  others = _tr.attr('others');
+							$('#content').load('views/supplier/supplier_show.html',function(){
+								var $form = $('#supplierForm');
+								$form.find('#suppId').val(suppId);
+								$form.find('#suppIdTxt').text(suppId);
+								$form.find('#suppName').val(suppName);
+								$form.find('#contactPerson').val(contactPerson);
+								$form.find('#telphone').val(telphone);
+								$form.find('#address').val(address);
+								$form.find('#others').val(others);
+								
+								$form.attr('action','supplier/update.do');
+							});
+						})
+						
+					}else{
+						alert(res);
+					}
+				})
+			}
+		}
+		supplier.init();
+		
+	});
+</script>

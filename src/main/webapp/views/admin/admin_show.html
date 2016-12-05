@@ -1,0 +1,87 @@
+<form id="adminForm" class="form-horizontal" role="form" action="admin/save.do">
+  <div class="form-group">
+    <label class="col-md-2 control-label">账户名</label>
+    <div class="col-md-5">
+      <p class="form-control-static" id="loginIdTxt"></p>
+      <input type="hidden" id="loginId" name="loginId" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="loginBackPassword" class="col-sm-2 control-label">原密码</label>
+    <div class="col-sm-5">
+      <input type="password" class="form-control" id="loginBackPassword" name="loginBackPassword" placeholder="原密码">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="loginPassword" class="col-sm-2 control-label">新密码</label>
+    <div class="col-sm-5">
+      <input type="password" class="form-control" id="loginPassword" name="loginPassword" placeholder="新密码">
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <button type="submit" class="btn btn-primary">保存</button>
+    </div>
+  </div>
+</form>
+<script>
+	$(function(){
+		
+		$('#adminForm').bootstrapValidator({
+		    excluded: [':disabled', ':hidden', ':not(:visible)'],
+		    feedbackIcons: {
+		        valid: 'glyphicon glyphicon-ok',
+		        invalid: 'glyphicon glyphicon-remove',
+		        validating: 'glyphicon glyphicon-refresh'
+		    },
+		    live: 'enabled',
+		    message: 'This value is not valid',
+		    fields: {
+		    	loginId:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'账户名不能为空'
+		    			}
+		    		}
+		    	},
+		    	loginBackPassword:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'原密码不能为空'
+		    			},
+		    			remote: {
+	                message: '原密码输入不正确',
+	                url: 'admin/chkPassword.do?loginId='+$('#loginId').val()
+	            },
+	            different: {
+	                field: 'loginPassword',
+	                message: '原密码与新密码不能一致'
+	            }
+		    		}
+		    	},
+		    	loginPassword:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'新密码不能为空'
+		    			},
+		    			different: {
+	                field: 'loginBackPassword',
+	                message: '新密码与原密码不能一致'
+	            }
+		    		}
+		    	}
+		    },
+		    submitHandler: function(validator, form, submitButton) {
+		    	$.post(form.attr('action'),form.serialize(),function(res){
+		    		if(res.success){
+		    			$('#content').load('views/admin/admin_list.html');
+		    			toastr.success('操作成功','提示');
+		    		}else{
+		    			toastr.error('操作失败，请稍后重试...','提示');
+		    			toastr.error(res.message,'提示');
+		    		}
+		    	})
+		    }
+		});
+	});
+</script>

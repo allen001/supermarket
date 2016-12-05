@@ -1,0 +1,114 @@
+<div class="panel panel-primary">
+  <div class="panel-heading">商品列表</div>
+  <div class="panel-body">
+  	<table class="table table-hover table-bordered">
+    	<thead>
+    		<tr>
+    			<th>商品编号</th>
+    			<th>供货商名称</th>
+    			<th>商品名称</th>
+    			<th>类别</th>
+    			<th>单价</th>
+    			<th>产地</th>
+    			<th>备注</th>
+    			<th>操作</th>
+    		</tr>
+    	</thead>
+    	<tbody id="goodsListTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script id="goodslist" type="text/html">
+{{each list as value i}}
+	<tr suppId="{{value.suppId}}">
+		<td>{{value.merchId}}</td>
+		<td>{{value.suppName}}</td>
+		<td>{{value.merchName}}</td>
+		<td>{{value.kind | getGoodType}}</td>
+		<td>{{value.unitCost}}</td>
+		<td>{{value.merchAddr}}</td>
+		<td>{{value.others}}</td>
+		<td>
+			<button del dId="{{value.merchId}}" class="btn btn-sm btn-primary">删除</button>
+			<button upd class="btn btn-sm btn-primary">编辑</button>
+		</td>
+	</tr>
+{{/each}}
+</script>
+<script>
+	$(function(){
+		//update breadcrumb
+		$('#breadcrumb2').text('商品管理')
+		$('#breadcrumb3').text('商品列表')
+		
+		var goods = {
+			init:function(){
+				$.post('goods/list.do',function(res){
+					if(res.success){
+						var html = template('goodslist', {'list':res.others});
+						$('#goodsListTbody').html(html);
+						
+						//del
+						$('#goodsListTbody').find('button[del]').on('click',function(){
+							var id = $(this).attr('dId');
+							layer.confirm('确定要删除？',{icon:3,title:'提示'},function(index){
+								$.post('goods/del.do',{'id':id},function(res){
+									if(res.success){
+										goods.init();
+									}
+								});
+								layer.close(index);
+							});
+						})
+						
+						//upd
+						$('#goodsListTbody').find('button[upd]').on('click',function(){
+							var _tr = $(this).closest('tr'),
+								  _tds = _tr.find('td'),
+								  goodsId = _tds.eq(0).text(),
+								  suppId = _tr.attr('suppId'),
+								  goodsName = _tds.eq(2).text(),
+								  kind = _tds.eq(3).text(),
+								  unitCost = _tds.eq(4).text(),
+								  merchAddr = _tds.eq(5).text(),
+								  others = _tds.eq(6).text();
+							$('#content').load('views/goods/goods_show.html',function(){
+								var $form = $('#goodsForm');
+								$form.find('#merchId').val(goodsId);
+								$form.find('#merchIdTxt').text(goodsId);
+								$form.find('#suppIdHidd').val(suppId);
+								$form.find('#merchName').val(goodsName);
+								$form.find('input[value="'+kind+'"]').attr('checked','checked');
+								$form.find('#unitCost').val(unitCost);
+								$form.find('#merchAddr').val(merchAddr);
+								$form.find('#others').val(others);
+								
+								$form.attr('action','goods/update.do');
+							});
+						})
+						
+					}else{
+						alert(res);
+					}
+				})
+				goods.initType();
+			},
+			typeArr:[],
+			initType:function(){
+				var _t = this;
+				_t.typeArr[0]='包装食品';
+				_t.typeArr[1]='饮料酒水';
+				_t.typeArr[2]='副食';
+				_t.typeArr[3]='粮油';
+				_t.typeArr[4]='生鲜类';
+				_t.typeArr[5]='家具百货';
+				
+				template.helper('getGoodType',function(code){
+	    		return _t.typeArr[code];
+	    	});
+			}
+		}
+		goods.init();
+	});
+</script>

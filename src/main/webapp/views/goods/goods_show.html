@@ -1,0 +1,164 @@
+<form id="goodsForm" class="form-horizontal" role="form" action="goods/save.do">
+  <div class="form-group">
+    <label class="col-md-2 control-label">商品编号</label>
+    <div class="col-md-5">
+      <p class="form-control-static" id="merchIdTxt"></p>
+      <input type="hidden" id="merchId" name="merchId" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="suppId" class="col-sm-2 control-label">供货商</label>
+    <div class="col-sm-5">
+    	<input type="hidden" name="suppIdHidd" id="suppIdHidd" value="" />
+      <select name="suppId" id="suppId" class="form-control"></select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="merchName" class="col-sm-2 control-label">商品名称</label>
+    <div class="col-sm-5">
+      <input type="text" class="form-control" id="merchName" name="merchName" placeholder="商品名称">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="kind" class="col-sm-2 control-label">类别</label>
+    <div class="col-sm-5">
+    	<div class="radio">
+    		<label>
+    			<input type="radio" name="kind" value="0"> 包装食品
+    		</label>
+    	</div>
+    	<div class="radio">
+    		<label>
+    			<input type="radio" name="kind" value="1"> 饮料烟酒
+    		</label>
+    	</div>
+    	<div class="radio">
+    		<label>
+    			<input type="radio" name="kind" value="2"> 副食
+    		</label>
+    	</div>
+    	<div class="radio">
+    		<label>
+    			<input type="radio" name="kind" value="3"> 粮油
+    		</label>
+    	</div>
+    	<div class="radio">
+    		<label>
+    			<input type="radio" name="kind" value="4"> 生鲜类
+    		</label>
+    	</div>
+    	<div class="radio">
+    		<label>
+    			<input type="radio" name="kind" value="5"> 家居百货
+    		</label>
+    	</div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="unitCost" class="col-sm-2 control-label">单价</label>
+    <div class="col-sm-5">
+      <input type="text" min="1" step="0.1" class="form-control" id="unitCost" name="unitCost" placeholder="单价">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="merchAddr" class="col-sm-2 control-label">产地</label>
+    <div class="col-sm-5">
+      <input type="text" class="form-control" id="merchAddr" name="merchAddr" placeholder="产地">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="others" class="col-sm-2 control-label">备注</label>
+    <div class="col-sm-5">
+      <textarea class="form-control" id="others" name="others" placeholder="备注" style="width: 100%;height: 100px;resize: none;"></textarea>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <button type="submit" class="btn btn-primary">保存</button>
+    </div>
+  </div>
+</form>
+<script>
+	$(function(){
+		//get id
+		if($('#goodsForm').attr('action')!='goods/update.do'){
+			$.get('goods/selectMaxGoodsId.do',function(res){
+				if(res.success){
+					$('#merchId').val(res.others);
+					$('#merchIdTxt').text(res.others);
+				}
+			});
+		}
+		
+		//init suppId
+		$.get('supplier/list.do',function(res){
+			var opt = '<option value="">--请选择--</option>'
+			if(res.success){
+				var list = res.others,
+						suppId = $('#suppIdHidd').val();
+				for(var i=0,len=list.length;i<len;i++){
+					opt += '<option '+(suppId==list[i].suppId?'selected="selected"':'')+' value="'+list[i].suppId+'">'+list[i].suppName+'</option>';
+				}
+			}
+			$('#suppId').html(opt);
+		});
+		
+		$('#goodsForm').bootstrapValidator({
+		    excluded: [':disabled', ':hidden', ':not(:visible)'],
+		    feedbackIcons: {
+		        valid: 'glyphicon glyphicon-ok',
+		        invalid: 'glyphicon glyphicon-remove',
+		        validating: 'glyphicon glyphicon-refresh'
+		    },
+		    live: 'enabled',
+		    message: 'This value is not valid',
+		    fields: {
+		    	suppId:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'供货商不能为空'
+		    			}
+		    		}
+		    	},
+		    	merchName:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'商品不能为空'
+		    			}
+		    		}
+		    	},
+		    	kind:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'类别不能为空'
+		    			}
+		    		}
+		    	},
+		    	unitCost:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'单价不能为空'
+		    			}
+		    		}
+		    	},
+		    	merchAddr:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'产地不能为空'
+		    			}
+		    		}
+		    	},
+		    },
+		    submitHandler: function(validator, form, submitButton) {
+		    	$.post(form.attr('action'),form.serialize(),function(res){
+		    		if(res.success){
+		    			$('#content').load('views/goods/goods_list.html');
+		    			toastr.success('操作成功','提示');
+		    		}else{
+		    			toastr.error('操作失败，请稍后重试...','提示');
+		    		}
+		    	})
+		    }
+		});
+	});
+</script>

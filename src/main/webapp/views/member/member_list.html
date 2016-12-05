@@ -1,0 +1,96 @@
+<div class="panel panel-primary">
+  <div class="panel-heading">会员列表</div>
+  <div class="panel-body">
+  	<table class="table table-hover table-bordered">
+    	<thead>
+    		<tr>
+    			<th>会员编号</th>
+    			<th>姓名</th>
+    			<th>性别</th>
+    			<th>身份证</th>
+    			<th>折扣(%)</th>
+    			<th>备注</th>
+    			<th>操作</th>
+    		</tr>
+    	</thead>
+    	<tbody id="memberListTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script id="memberlist" type="text/html">
+{{each list as value i}}
+	<tr sex="{{value.sex}}">
+		<td>{{value.memberId}}</td>
+		<td>{{value.memberName}}</td>
+		<td>{{value.sex | getFormatSex}}</td>
+		<td>{{value.idcard}}</td>
+		<td>{{value.memberDiscount}}</td>
+		<td>{{value.others}}</td>
+		<td>
+			<button del dId="{value.memberId}}" class="btn btn-sm btn-primary">删除</button>
+			<button upd class="btn btn-sm btn-primary">编辑</button>
+		</td>
+	</tr>
+{{/each}}
+</script>
+<script>
+	$(function(){
+		//update breadcrumb
+		$('#breadcrumb2').text('会员管理')
+		$('#breadcrumb3').text('会员列表')
+		
+		var member = {
+			init:function(){
+				$.post('member/list.do',function(res){
+					if(res.success){
+						var html = template('memberlist', {'list':res.others});
+						$('#memberListTbody').html(html);
+						
+						//del
+						$('#memberListTbody').find('button[del]').on('click',function(){
+							var id = $(this).attr('dId');
+							layer.confirm('确定要删除？',{icon:3,title:'提示'},function(index){
+								$.post('member/del.do',{'id':id},function(res){
+									if(res.success){
+										member.init();
+									}
+								});
+								layer.close(index);
+							});
+						})
+						
+						//upd
+						$('#memberListTbody').find('button[upd]').on('click',function(){
+							var _tr = $(this).closest('tr'),
+								  _tds = _tr.find('td'),
+								  memberId = _tds.eq(0).text(),
+								  memberName = _tds.eq(1).text(),
+								  idcard = _tds.eq(3).text(),
+								  sex = _tr.attr('sex'),
+								  memberDiscount = _tds.eq(4).text(),
+								  others = _tds.eq(5).text();
+							$('#content').load('views/member/member_show.html',function(){
+								var $form = $('#memberForm');
+								$form.find('#memberId').val(memberId);
+								$form.find('#memberIdTxt').text(memberId);
+								$form.find('#memberName').val(memberName);
+								$form.find('#memberDiscount').val(memberDiscount);
+								$form.find('#idcard').val(idcard);
+								$form.find('input[value="'+sex+'"]').attr('checked','checked');
+								$form.find('#others').val(others);
+								
+								$form.attr('action','member/update.do');
+							});
+						})
+						
+					}else{
+						alert(res);
+					}
+				})
+			}
+		}
+		member.init();
+		
+	});
+</script>

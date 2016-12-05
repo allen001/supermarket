@@ -1,0 +1,195 @@
+<form id="buyForm" class="form-horizontal" role="form" action="buy/save.do">
+  <div class="form-group">
+    <label class="col-md-2 control-label">进货单号</label>
+    <div class="col-md-5">
+      <p class="form-control-static" id="buyIdTxt"></p>
+      <input type="hidden" id="buyId" name="buyId" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="suppId" class="col-sm-2 control-label">供货商</label>
+    <div class="col-sm-5">
+    	<input type="hidden" name="suppIdHidd" id="suppIdHidd" value="" />
+      <select name="suppId" id="suppId" class="form-control">
+      	<option value="">--请选择--</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="goodId" class="col-sm-2 control-label">商品名称</label>
+    <div class="col-sm-5">
+    	<input type="hidden" name="goodIdHidd" id="goodIdHidd" value="" />
+      <select name="goodId" id="goodId" class="form-control">
+      	<option value="">--请选择--</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-md-2 control-label">单价(元)</label>
+    <div class="col-md-5">
+      <p class="form-control-static" id="amountTxt">0.00</p>
+      <input type="hidden" id="amount" name="amount" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="sum" class="col-sm-2 control-label">数量</label>
+    <div class="col-sm-5">
+      <input type="number" class="form-control" id="sum" name="sum" placeholder="数量">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-md-2 control-label">总金额(元)</label>
+    <div class="col-md-5">
+      <p class="form-control-static" id="totalAmountTxt">0.00</p>
+      <input type="hidden" id="totalAmount" name="totalAmount" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="buyTime1" class="col-sm-2 control-label">进货日期</label>
+    <div class="col-sm-5">
+    	<input type="text" class="form-control" id="buyTime1" name="buyTime1" readonly="readonly" placeholder="进货日期">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="others" class="col-sm-2 control-label">备注</label>
+    <div class="col-sm-5">
+      <textarea class="form-control" id="others" name="others" placeholder="备注" style="width: 100%;height: 100px;resize: none;"></textarea>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <button type="submit" class="btn btn-primary">保存</button>
+    </div>
+  </div>
+</form>
+<script>
+	$(function(){
+		//init date
+		$('#buyTime1').datetimepicker({
+			format: "yyyy-mm-dd",
+	    autoclose: true,
+	    minView: "month",
+	    maxView: "decade",
+	    language: 'zh-CN',
+	    todayBtn: true,
+	    forceParse : false,
+	    //pickerPosition: "bottom-left"
+		});
+		//get id
+		var fl = $('#buyForm').attr('action')!='buy/update.do';
+		if(fl){
+			$.get('buy/selectMaxBuyId.do',function(res){
+				if(res.success){
+					$('#buyId').val(res.others);
+					$('#buyIdTxt').text(res.others);
+				}
+			});
+		}
+		
+		//init suppId
+		$.get('supplier/list.do',function(res){
+			var opt = '<option value="">--请选择--</option>'
+			if(res.success){
+				var list = res.others,
+						suppId = $('#suppIdHidd').val();
+				for(var i=0,len=list.length;i<len;i++){
+					opt += '<option '+(suppId==list[i].suppId?'selected="selected"':'')+' value="'+list[i].suppId+'">'+list[i].suppName+'</option>';
+				}
+			}
+			$('#suppId').html(opt);
+			if(!fl){
+				$('#suppId').trigger('change');
+			}
+		});
+		
+		//suppId change
+		$('#suppId').on('change',function(){
+			var suppId = $('#suppId').val();
+			$.get('goods/list.do',{'suppId':suppId},function(res){
+				var opt = '<option value="">--请选择--</option>'
+				if(res.success){
+					var list = res.others,
+							goodId = $('#goodIdHidd').val();
+					for(var i=0,len=list.length;i<len;i++){
+						opt += '<option '+(goodId==list[i].merchId?'selected="selected"':'')+' value="'+list[i].merchId+'">'+list[i].merchName+'</option>';
+					}
+				}
+				$('#goodId').html(opt);
+			});
+		});
+		
+		//goodId change
+		$('#goodId').on('change',function(){
+			var goodId = $(this).val();
+			$.get('goods/find.do',{'merchId':goodId},function(res){
+				if(res.success){
+					var good = res.others;
+					$('#amountTxt').text(good.unitCost);
+					$('#amount').val(good.unitCost);
+				}else{
+					console.log(res.message);
+				}
+			});
+		});
+		
+		//sum blur
+		$('#sum').on('blur',function(){
+			var amount = Number($('#amount').val()),
+					sum = Number($('#sum').val()),
+					totalAmount= sum * amount;
+			$('#totalAmount').val(totalAmount);
+			$('#totalAmountTxt').text(totalAmount);
+		});
+		
+		$('#buyForm').bootstrapValidator({
+		    excluded: [':disabled', ':hidden', ':not(:visible)'],
+		    feedbackIcons: {
+		        valid: 'glyphicon glyphicon-ok',
+		        invalid: 'glyphicon glyphicon-remove',
+		        validating: 'glyphicon glyphicon-refresh'
+		    },
+		    live: 'enabled',
+		    message: 'This value is not valid',
+		    fields: {
+		    	suppId:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'供货商不能为空'
+		    			}
+		    		}
+		    	},
+		    	goodId:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'商品名称不能为空'
+		    			}
+		    		}
+		    	},
+		    	sum:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'数量不能为空'
+		    			}
+		    		}
+		    	},
+		    	buyTime:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'进货日期不能为空'
+		    			}
+		    		}
+		    	}
+		    },
+		    submitHandler: function(validator, form, submitButton) {
+		    	$.post(form.attr('action'),form.serialize(),function(res){
+		    		if(res.success){
+		    			$('#content').load('views/buy/buy_list.html');
+		    			toastr.success('操作成功','提示');
+		    		}else{
+		    			toastr.error('操作失败，请稍后重试...','提示');
+		    		}
+		    	});
+		    }
+		});
+	});
+</script>

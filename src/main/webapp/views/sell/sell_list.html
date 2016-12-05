@@ -1,0 +1,106 @@
+<div class="panel panel-primary">
+  <div class="panel-heading">商品列表</div>
+  <div class="panel-body">
+  	<table class="table table-hover table-bordered">
+    	<thead>
+    		<tr>
+    			<th>出货单号</th>
+    			<th>供货商名称</th>
+    			<th>商品名称</th>
+    			<th>单价(元)</th>
+    			<th>数量</th>
+    			<th>总金额(元)</th>
+    			<th>出货日期</th>
+    			<th>备注</th>
+    			<th>操作</th>
+    		</tr>
+    	</thead>
+    	<tbody id="sellListTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script id="selllist" type="text/html">
+{{each list as value i}}
+	<tr goodId="{{value.goodId}}" suppId="{{value.suppId}}">
+		<td>{{value.sellId}}</td>
+		<td>{{value.suppName}}</td>
+		<td>{{value.goodName}}</td>
+		<td>{{value.amount}}</td>
+		<td>{{value.sum}}</td>
+		<td>{{value.totalAmount}}</td>
+		<td>{{value.sellTime}}</td>
+		<td>{{value.others}}</td>
+		<td>
+			<button del dId="{{value.sellId}}" class="btn btn-sm btn-primary">删除</button>
+			<button upd class="btn btn-sm btn-primary">编辑</button>
+		</td>
+	</tr>
+{{/each}}
+</script>
+<script>
+	$(function(){
+		//update breadcrumb
+		$('#breadcrumb2').text('进出货管理');
+		$('#breadcrumb3').text('出货列表');
+		
+		var sell = {
+			init:function(){
+				$.post('sell/list.do',function(res){
+					if(res.success){
+						var html = template('selllist', {'list':res.others});
+						$('#sellListTbody').html(html);
+						
+						//del
+						$('#sellListTbody').find('button[del]').on('click',function(){
+							var id = $(this).attr('dId');
+							layer.confirm('确定要删除？',{icon:3,title:'提示'},function(index){
+								$.post('sell/del.do',{'id':id},function(res){
+									if(res.success){
+										sell.init();
+									}
+								});
+								layer.close(index);
+							});
+						})
+						
+						//upd
+						$('#sellListTbody').find('button[upd]').on('click',function(){
+							var _tr = $(this).closest('tr'),
+								  _tds = _tr.find('td'),
+								  sellId = _tds.eq(0).text(),
+								  goodId = _tr.attr('goodId'),
+								  suppId = _tr.attr('suppId'),
+								  amount = _tds.eq(3).text(),
+								  sum = _tds.eq(4).text(),
+								  totalAmount = _tds.eq(5).text(),
+								  sellTime = _tds.eq(6).text(),
+								  others = _tds.eq(7).text();
+							$('#content').load('views/sell/sell_show.html',function(){
+								var $form = $('#sellForm');
+								$form.find('#sellId').val(sellId);
+								$form.find('#sellIdTxt').text(sellId);
+								$form.find('#suppIdHidd').val(suppId);
+								$form.find('#goodIdHidd').val(goodId);
+								$form.find('#amountTxt').text(amount);
+								$form.find('#amount').val(amount);
+								$form.find('#totalAmountTxt').text(totalAmount);
+								$form.find('#totalAmount').val(totalAmount);
+								$form.find('#sum').val(sum);
+								$form.find('#sellTime1').val(sellTime);
+								$form.find('#others').val(others);
+								
+								$form.attr('action','sell/update.do');
+							});
+						})
+						
+					}else{
+						alert(res);
+					}
+				})
+			}
+		}
+		sell.init();
+		
+	});
+</script>

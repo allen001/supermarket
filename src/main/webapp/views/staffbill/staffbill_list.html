@@ -1,0 +1,123 @@
+<div class="panel panel-primary">
+  <div class="panel-heading">职工列表</div>
+  <div class="panel-body">
+  	<table class="table table-hover table-bordered">
+    	<thead>
+    		<tr>
+    			<th>职工编号</th>
+    			<th>姓名</th>
+    			<th>密码</th>
+    			<th>性别</th>
+    			<th>身份证</th>
+    			<th>操作</th>
+    		</tr>
+    	</thead>
+    	<tbody id="userListTbody"></tbody>
+    </table>
+  </div>
+</div>
+<div id="userModal" class="modal fade">
+  <div class="modal-dialog">
+  	<form id="userForm" class="form-horizontal" action="user/saveOrUpdate.do">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title">职工信息</h4>
+      </div>
+      <div class="modal-body">
+		  <div class="form-group">
+		    <label for="name" class="col-sm-2 control-label">Email</label>
+		    <div class="col-sm-10">
+		      <input type="email" class="form-control" id="name" name="name" placeholder="Email">
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <label for="password1" class="col-sm-2 control-label">Password</label>
+		    <div class="col-sm-10">
+		      <input type="text" class="form-control" id="password1" name="password1" placeholder="Password">
+		    </div>
+		  </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">保存</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+      </div>
+    </div><!-- /.modal-content -->
+    </form>
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<script id="userlist" type="text/html">
+{{each list as value i}}
+	<tr sex="{{value.sex}}" others="{{value.others}}">
+		<td>{{value.staffId}}</td>
+		<td>{{value.stallName}}</td>
+		<td>{{value.stallPassword}}</td>
+		<td>{{value.sex | getFormatSex}}</td>
+		<td>{{value.idcard}}</td>
+		<td>
+			<button del dId="{{value.staffId}}" class="btn btn-sm btn-primary">删除</button>
+			<button upd class="btn btn-sm btn-primary">编辑</button>
+		</td>
+	</tr>
+{{/each}}
+</script>
+<script>
+	$(function(){
+		//update breadcrumb
+		$('#breadcrumb3').text('职工列表')
+		
+		var staffbill = {
+			init:function(){
+				$.post('staffbill/list.do',function(res){
+					if(res.success){
+						var html = template('userlist', {'list':res.others});
+						$('#userListTbody').html(html);
+						
+						//del
+						$('#userListTbody').find('button[del]').on('click',function(){
+							var id = $(this).attr('dId');
+							layer.confirm('确定要删除？',{icon:3,title:'提示'},function(index){
+								$.post('staffbill/del.do',{'id':id},function(res){
+									if(res.success){
+										staffbill.init();
+									}
+								});
+								layer.close(index);
+							});
+						})
+						
+						//upd
+						$('#userListTbody').find('button[upd]').on('click',function(){
+							var _tr = $(this).closest('tr'),
+								  _tds = _tr.find('td'),
+								  staffId = _tds.eq(0).text(),
+								  stallName = _tds.eq(1).text(),
+								  stallPassword = _tds.eq(2).text(),
+								  idcard = _tds.eq(4).text(),
+								  sex = _tr.attr('sex'),
+								  others = _tr.attr('others');
+							$('#content').load('views/staffbill/staffbill_show.html',function(){
+								var $form = $('#staffbillForm');
+								$form.find('#staffId').val(staffId);
+								$form.find('#staffIdTxt').text(staffId);
+								$form.find('#stallName').val(stallName);
+								$form.find('#stallPassword').val(stallPassword);
+								$form.find('#idcard').val(idcard);
+								$form.find('input[value="'+sex+'"]').attr('checked','checked');
+								$form.find('#others').val(others);
+								
+								$form.attr('action','staffbill/update.do');
+							});
+						})
+						
+					}else{
+						alert(res);
+					}
+				})
+			}
+		}
+		staffbill.init();
+		
+	});
+</script>

@@ -1,0 +1,117 @@
+<form id="staffbillForm" class="form-horizontal" role="form" action="staffbill/save.do">
+  <div class="form-group">
+    <label class="col-md-2 control-label">职工编号</label>
+    <div class="col-md-5">
+      <p class="form-control-static" id="staffIdTxt"></p>
+      <input type="hidden" id="staffId" name="staffId" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="stallName" class="col-sm-2 control-label">职工姓名</label>
+    <div class="col-sm-5">
+      <input type="text" class="form-control" id="stallName" name="stallName" placeholder="职工姓名">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="stallPassword" class="col-sm-2 control-label">职工密码</label>
+    <div class="col-sm-5">
+      <input type="password" class="form-control" id="stallPassword" name="stallPassword" placeholder="职工密码">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="sex" class="col-sm-2 control-label">性别</label>
+    <div class="col-sm-5">
+    	<div class="radio">
+    		<label>
+    			<input type="radio" name="sex" value="0"> 男
+    		</label>
+    	</div>
+    	<div class="radio">
+    		<label>
+    			<input type="radio" name="sex" value="1"> 女
+    		</label>
+    	</div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="idcard" class="col-sm-2 control-label">身份证</label>
+    <div class="col-sm-5">
+      <input type="text" class="form-control" id="idcard" name="idcard" placeholder="身份证">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="others" class="col-sm-2 control-label">备注</label>
+    <div class="col-sm-5">
+      <textarea class="form-control" id="others" name="others" placeholder="备注" style="width: 100%;height: 100px;resize: none;"></textarea>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <button type="submit" class="btn btn-primary">保存</button>
+    </div>
+  </div>
+</form>
+<script>
+	$(function(){
+		//get id
+		if($('#staffbillForm').attr('action')!='staffbill/update.do'){
+			$.get('staffbill/selectMaxStaffbillId.do',function(res){
+				if(res.success){
+					$('#staffId').val(res.others);
+					$('#staffIdTxt').text(res.others);
+				}
+			});
+		}
+		
+		$('#staffbillForm').bootstrapValidator({
+		    excluded: [':disabled', ':hidden', ':not(:visible)'],
+		    feedbackIcons: {
+		        valid: 'glyphicon glyphicon-ok',
+		        invalid: 'glyphicon glyphicon-remove',
+		        validating: 'glyphicon glyphicon-refresh'
+		    },
+		    live: 'enabled',
+		    message: 'This value is not valid',
+		    fields: {
+		    	stallName:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'职工姓名不能为空'
+		    			}
+		    		}
+		    	},
+		    	stallPassword:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'职工密码不能为空'
+		    			}
+		    		}
+		    	},
+		    	sex:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'性别不能为空'
+		    			}
+		    		}
+		    	},
+		    	idcard:{
+		    		validators:{
+		    			notEmpty:{
+		    				message:'身份证不能为空'
+		    			}
+		    		}
+		    	}
+		    },
+		    submitHandler: function(validator, form, submitButton) {
+		    	$.post(form.attr('action'),form.serialize(),function(res){
+		    		if(res.success){
+		    			$('#content').load('views/staffbill/staffbill_list.html');
+		    			toastr.success('操作成功','提示');
+		    		}else{
+		    			toastr.error('操作失败，请稍后重试...','提示');
+		    		}
+		    	})
+		    }
+		});
+	});
+</script>
